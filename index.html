@@ -33,6 +33,10 @@ function appScript(state){
   const TOKEN = BOOT.token || '';
   let version = BOOT.version || 1;
   let conflict = null;
+  let logo = BOOT.logo || null;      // metadata only
+  let logoBytes = null;              // base64 payload, fetched separately
+  let logoBusy = false;
+  let logoError = '';
 
   /* ---------------------------------------------------------------- */
   /* styles — injected once so the outer file needs no <style> block  */
@@ -130,6 +134,30 @@ function appScript(state){
   }
   .masthead .save-note strong{ color:inherit; }
 
+  .logo-drop{
+    border:1.5px dashed var(--line); border-radius:12px; padding:26px 22px; text-align:center;
+    background:var(--paper); transition:border-color .15s, background .15s;
+  }
+  .logo-drop.dragging{ border-color:var(--accent); background:var(--accent-tint); }
+  .logo-drop p{ margin:8px 0 0; font-size:13.5px; color:var(--ink-faint); }
+  .logo-preview{
+    display:flex; gap:20px; align-items:center; flex-wrap:wrap;
+    border:1px solid var(--line); border-radius:12px; padding:18px; background:var(--paper);
+  }
+  .logo-frame{
+    flex:none; width:230px; height:96px; border-radius:8px; border:1px solid var(--line-soft);
+    display:flex; align-items:center; justify-content:center; padding:10px;
+    background-color:#fff;
+    background-image:
+      linear-gradient(45deg, rgba(16,40,43,.07) 25%, transparent 25%, transparent 75%, rgba(16,40,43,.07) 75%),
+      linear-gradient(45deg, rgba(16,40,43,.07) 25%, transparent 25%, transparent 75%, rgba(16,40,43,.07) 75%);
+    background-size:14px 14px; background-position:0 0, 7px 7px;
+  }
+  .logo-frame img{ max-width:100%; max-height:100%; object-fit:contain; display:block; }
+  .logo-meta{ min-width:0; flex:1 1 220px; font-size:13.5px; color:var(--ink-soft); }
+  .logo-meta .logo-name{ color:var(--ink); font-weight:600; word-break:break-word; }
+  .logo-actions{ display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+  .logo-error{ margin-top:12px; color:var(--warn); font-size:13.5px; }
   .banner{
     border:1px solid var(--line); background:var(--surface); border-radius:10px;
     padding:12px 16px; margin-bottom:24px; font-size:14px; color:var(--ink-soft);
@@ -409,11 +437,65 @@ function appScript(state){
   /* CHAPTER 3 — logo                                                   */
   /* ---------------------------------------------------------------- */
   function renderLogoChapter(){
+    const busy = logoBusy ? `<div class="hint" style="margin-top:10px;">Uploading\u2026</div>` : '';
+    const err = logoError ? `<div class="logo-error">${esc(logoError)}</div>` : '';
+
+    let inner;
+    if(logo){
+      const src = logoBytes ? `data:${escAttr(logo.mime)};base64,${logoBytes}` : '';
+      const when = fmtWhen(logo.uploaded_at);
+      inner = `
+        <div class="logo-preview">
+          <div class="logo-frame">${src ? `<img src="${src}" alt="${escAttr(UNI_NAME)} logo">` : '<span class="hint">Loading preview…</span>'}</div>
+          <div class="logo-meta">
+            <div class="logo-name">${esc(logo.filename)}</div>
+            <div>${esc(fileTypeLabel(logo.mime))} · ${esc(fileSize(logo.byte_size))}</div>
+            ${when ? `<div>Uploaded ${esc(when)}${logo.uploaded_by ? ' by ' + esc(logo.uploaded_by) : ''}</div>` : ''}
+            ${readOnly ? '' : `<div class="logo-actions">
+              <button class="btn" data-action="logo-pick">Replace</button>
+              <button class="btn btn-ghost" data-action="logo-remove">Remove</button>
+            </div>`}
+          </div>
+        </div>`;
+    } else if(readOnly){
+      inner = `<div class="banner">No logo has been uploaded yet.</div>`;
+    } else {
+      inner = `
+        <div class="logo-drop" id="logo-drop">
+          <button class="btn btn-primary" data-action="logo-pick">Choose a logo file</button>
+          <p>or drag it here — PNG, SVG, JPG or WebP, up to 1.5&nbsp;MB</p>
+        </div>`;
+    }
+
     return `
     <section class="chapter" id="ch-3">
       ${chapterHead(3, 'Logo', 'Your logo appears throughout your Tribe platform, from the sign-in page to email notifications.')}
-      <div class="banner">Please email a horizontal version of your logo, with no background, to your Tribe contact.</div>
+      ${inner}
+      ${busy}
+      ${err}
+      <div class="callout">
+        <div class="eyebrow">What works best</div>
+        A <strong>horizontal</strong> version of your logo with a <strong>transparent background</strong> — SVG or PNG.
+        The checkered area above shows where the background is transparent.
+      </div>
+      <input type="file" id="logo-input" accept="image/png,image/jpeg,image/webp,image/svg+xml" style="display:none">
     </section>`;
+  }
+
+  function fileSize(n){
+    if(!n && n !== 0) return '';
+    if(n < 1000) return n + ' B';
+    if(n < 1000000) return (n / 1000).toFixed(0) + ' KB';
+    return (n / 1000000).toFixed(1) + ' MB';
+  }
+
+  function fileTypeLabel(mime){
+    return ({
+      'image/png': 'PNG',
+      'image/jpeg': 'JPEG',
+      'image/webp': 'WebP',
+      'image/svg+xml': 'SVG'
+    })[mime] || mime;
   }
 
   /* ---------------------------------------------------------------- */
@@ -730,6 +812,7 @@ function appScript(state){
     renderSaveBar();
     if(!eventsAttached){ attachEvents(); eventsAttached = true; }
     setupScrollSpy();
+    wireLogoInput();
   }
 
   function renderSaveBar(){
@@ -753,6 +836,31 @@ function appScript(state){
       nameInput.addEventListener('input', () => {
         editorName = nameInput.value;
         try{ localStorage.setItem('tribe-editor-name', editorName); }catch(e){}
+      });
+    }
+  }
+
+  function wireLogoInput(){
+    const input = document.getElementById('logo-input');
+    if(input){
+      input.addEventListener('change', () => {
+        const file = input.files && input.files[0];
+        if(file) uploadLogo(file);
+        input.value = '';
+      });
+    }
+
+    const drop = document.getElementById('logo-drop');
+    if(drop && !readOnly){
+      ['dragenter', 'dragover'].forEach(evt => drop.addEventListener(evt, (e) => {
+        e.preventDefault(); drop.classList.add('dragging');
+      }));
+      ['dragleave', 'drop'].forEach(evt => drop.addEventListener(evt, (e) => {
+        e.preventDefault(); drop.classList.remove('dragging');
+      }));
+      drop.addEventListener('drop', (e) => {
+        const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+        if(file) uploadLogo(file);
       });
     }
   }
@@ -920,6 +1028,8 @@ function appScript(state){
       const action = btn.getAttribute('data-action');
 
       if(action === 'conflict-reload'){ window.location.reload(); return; }
+      if(action === 'logo-pick'){ const i = document.getElementById('logo-input'); if(i) i.click(); return; }
+      if(action === 'logo-remove'){ removeLogo(); return; }
       if(action === 'conflict-overwrite'){ conflict = null; rerenderPreserveScroll(); doSave(true); return; }
 
       if(action === 'add-profile'){
@@ -1017,6 +1127,112 @@ function appScript(state){
   /* save / publish                                                     */
   /* ---------------------------------------------------------------- */
   /* ---------------------------------------------------------------- */
+  /* logo upload                                                        */
+  /* ---------------------------------------------------------------- */
+  const LOGO_MAX_BYTES = 1500000;
+  const LOGO_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'];
+
+  async function logoApi(payload){
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(Object.assign({ token: TOKEN }, payload))
+    });
+    return await res.json();
+  }
+
+  function readAsBase64(file){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('read failed'));
+      reader.onload = () => {
+        const result = String(reader.result || '');
+        const comma = result.indexOf(',');
+        resolve(comma >= 0 ? result.slice(comma + 1) : result);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function uploadLogo(file){
+    if(readOnly || !file) return;
+    logoError = '';
+
+    if(LOGO_TYPES.indexOf(file.type) === -1){
+      logoError = 'That file type isn\u2019t supported \u2014 please use PNG, SVG, JPG or WebP.';
+      rerenderPreserveScroll();
+      return;
+    }
+    if(file.size > LOGO_MAX_BYTES){
+      logoError = 'That file is ' + fileSize(file.size) + ' \u2014 the limit is 1.5 MB. A smaller PNG or an SVG will work.';
+      rerenderPreserveScroll();
+      return;
+    }
+
+    logoBusy = true;
+    rerenderPreserveScroll();
+
+    try{
+      const b64 = await readAsBase64(file);
+      const data = await logoApi({
+        action: 'logo_save',
+        filename: file.name,
+        mime: file.type,
+        size: file.size,
+        dataB64: b64,
+        savedBy: editorName
+      });
+      logoBusy = false;
+
+      if(data && data.ok){
+        logo = {
+          filename: data.filename, mime: data.mime, byte_size: data.byte_size,
+          uploaded_by: data.uploaded_by, uploaded_at: data.uploaded_at
+        };
+        logoBytes = b64;
+        logoError = '';
+      } else if(data && data.error === 'read_only'){
+        readOnly = true;
+      } else if(data && data.error === 'too_large'){
+        logoError = 'That file is too large \u2014 the limit is 1.5 MB.';
+      } else if(data && data.error === 'bad_type'){
+        logoError = 'That file type isn\u2019t supported \u2014 please use PNG, SVG, JPG or WebP.';
+      } else {
+        logoError = 'The upload didn\u2019t go through. Please try again.';
+      }
+    }catch(err){
+      logoBusy = false;
+      logoError = 'The upload didn\u2019t go through. Please try again.';
+    }
+    rerenderPreserveScroll();
+  }
+
+  async function removeLogo(){
+    if(readOnly || !logo) return;
+    logoBusy = true; logoError = '';
+    rerenderPreserveScroll();
+    try{
+      const data = await logoApi({ action: 'logo_delete', savedBy: editorName });
+      logoBusy = false;
+      if(data && data.ok){ logo = null; logoBytes = null; }
+      else if(data && data.error === 'read_only'){ readOnly = true; }
+      else { logoError = 'Couldn\u2019t remove the logo. Please try again.'; }
+    }catch(err){
+      logoBusy = false;
+      logoError = 'Couldn\u2019t remove the logo. Please try again.';
+    }
+    rerenderPreserveScroll();
+  }
+
+  async function loadLogoBytes(){
+    if(!logo || logoBytes) return;
+    try{
+      const data = await logoApi({ action: 'logo_get' });
+      if(data && data.ok){ logoBytes = data.data_b64; rerenderPreserveScroll(); }
+    }catch(err){ /* preview stays as a placeholder */ }
+  }
+
+  /* ---------------------------------------------------------------- */
   /* save / sync                                                        */
   /* ---------------------------------------------------------------- */
   let autosaveTimer = null;
@@ -1100,6 +1316,8 @@ function appScript(state){
     if(dirty && !readOnly){ e.preventDefault(); e.returnValue = ''; }
   });
 
+  loadLogoBytes();
+
   document.addEventListener('visibilitychange', () => {
     if(document.visibilityState === 'hidden' && dirty && !readOnly) doSave();
   });
@@ -1167,7 +1385,8 @@ function splash(title, message){
     token: token,
     version: data.version,
     updatedAt: data.updated_at,
-    updatedBy: data.updated_by
+    updatedBy: data.updated_by,
+    logo: data.logo || null
   };
 
   appScript(data.state);
