@@ -1,0 +1,1178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex, nofollow">
+<title>Tribe Onboarding Pack</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Onest:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  html,body{ margin:0; padding:0; background:#f5f0e5; color:#10282b;
+    font-family:'Onest',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
+  @media (prefers-color-scheme: dark){ html,body{ background:#0b1a1c; color:#eef4f1; } }
+  .splash{ min-height:100vh; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; text-align:center; padding:40px; gap:12px; }
+  .splash h1{ font-family:'Fraunces',Georgia,serif; font-size:26px; font-weight:600; margin:0; }
+  .splash p{ margin:0; max-width:34rem; line-height:1.6; opacity:.75; }
+</style>
+</head>
+<body>
+<div id="app"><div class="splash"><h1>Opening your onboarding pack&hellip;</h1><p>One moment.</p></div></div>
+<script>
+function appScript(state){
+
+  /* ---------------------------------------------------------------- */
+  /* boot context injected by the server (per-university, per-link)     */
+  /* ---------------------------------------------------------------- */
+  const BOOT = (typeof window !== 'undefined' && window.__BOOT__) || {};
+  const UNI_NAME = BOOT.university || 'Your University';
+  const CONTACT_EMAIL = BOOT.contactEmail || 'siam.vandervorst@tribeadmissions.com';
+  const CONTACT_CAL = BOOT.contactCalendar || '';
+  const API_URL = BOOT.apiUrl || '';
+  const TOKEN = BOOT.token || '';
+  let version = BOOT.version || 1;
+  let conflict = null;
+
+  /* ---------------------------------------------------------------- */
+  /* styles — injected once so the outer file needs no <style> block  */
+  /* ---------------------------------------------------------------- */
+  const CSS = `
+  :root{
+    --ink:#10282b; --ink-soft:#4e6669; --ink-faint:#7f9598;
+    --paper:#f5f0e5; --surface:#fdfbf5; --line:#e6dfd0; --line-soft:#f0eade;
+    --accent:#0f5b62; --accent-strong:#04272a; --accent-ink:#fdfbf5; --accent-tint:#e6f0eb;
+    --good:#3f7d52; --good-strong:#2e5f3e; --good-tint:#e6f0e5;
+    --warn:#96534b; --warn-tint:#f3e6e2;
+    --shadow:0 1px 2px rgba(16,40,43,.06), 0 10px 28px -14px rgba(16,40,43,.22);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ink:#eef4f1; --ink-soft:#a9bdbc; --ink-faint:#7c9291;
+      --paper:#0b1a1c; --surface:#12262a; --line:#22393d; --line-soft:#1a2f33;
+      --accent:#59c0b4; --accent-strong:#8ad1c8; --accent-ink:#04272a; --accent-tint:#163a3a;
+      --good:#7fbf8f; --good-strong:#9fd6ab; --good-tint:#16301f;
+      --warn:#d99a8f; --warn-tint:#3a201b;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.65);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ink:#eef4f1; --ink-soft:#a9bdbc; --ink-faint:#7c9291;
+    --paper:#0b1a1c; --surface:#12262a; --line:#22393d; --line-soft:#1a2f33;
+    --accent:#59c0b4; --accent-strong:#8ad1c8; --accent-ink:#04272a; --accent-tint:#163a3a;
+    --good:#7fbf8f; --good-strong:#9fd6ab; --good-tint:#16301f;
+    --warn:#d99a8f; --warn-tint:#3a201b;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.65);
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:'Onest', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size:16px; line-height:1.55; -webkit-font-smoothing:antialiased;
+  }
+  ::selection{ background:var(--accent-tint); color:var(--accent-strong); }
+  h1,h2,h3{ font-family:'Fraunces', Georgia, serif; text-wrap:balance; margin:0; font-weight:600; }
+  a{ color:var(--accent-strong); }
+  .mono{ font-family:'IBM Plex Mono', ui-monospace, monospace; }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace; font-size:11.5px; letter-spacing:.09em;
+    text-transform:uppercase; color:var(--ink-faint);
+  }
+  .shell{
+    max-width:1180px; margin:0 auto; padding:52px 28px 200px;
+    display:grid; grid-template-columns:236px minmax(0,760px); gap:44px;
+  }
+  @media (max-width: 900px){
+    .shell{ grid-template-columns:1fr; padding:28px 18px 220px; }
+    .nav{ position:static !important; order:-1; }
+  }
+  .nav{ position:sticky; top:28px; align-self:start; }
+  .nav-brand{ display:flex; align-items:center; gap:9px; margin-bottom:26px; }
+  .nav-brand img{ height:22px; width:auto; display:block; }
+  .nav-title{ font-size:12px; margin-bottom:14px; }
+  .nav-list{ list-style:none; margin:0; padding:0; border-left:1px solid var(--line); }
+  .nav-item a{
+    display:flex; gap:10px; align-items:baseline; text-decoration:none; color:var(--ink-soft);
+    padding:9px 0 9px 16px; margin-left:-1px; border-left:2px solid transparent;
+    font-size:14px; transition:color .15s, border-color .15s;
+  }
+  .nav-item a:hover{ color:var(--ink); }
+  .nav-item.active a{ color:var(--accent-strong); border-left-color:var(--accent); font-weight:600; }
+  .nav-num{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--ink-faint); min-width:16px; }
+  .nav-item.active .nav-num{ color:var(--accent-strong); }
+
+  .masthead{ margin-bottom:40px; }
+  .status-row{ display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin-bottom:18px; }
+  .pill{
+    display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:999px;
+    font-family:'IBM Plex Mono', monospace; font-size:11.5px; letter-spacing:.04em; text-transform:uppercase;
+    border:1px solid transparent;
+  }
+  .pill-warn{ background:var(--warn-tint); color:var(--warn); }
+  .pill-good{ background:var(--good-tint); color:var(--good-strong); }
+  .pill-dot{ width:6px; height:6px; border-radius:50%; background:currentColor; }
+  .masthead h1{ font-size:38px; margin-bottom:12px; }
+  .masthead .lede{ color:var(--ink-soft); max-width:62ch; font-size:16.5px; }
+  .masthead .meta{ margin-top:18px; font-size:12.5px; color:var(--ink-faint); }
+
+  .masthead .steps{ list-style:none; margin:20px 0 0; padding:0; display:flex; flex-direction:column; gap:9px; max-width:62ch; }
+  .masthead .steps li{ display:flex; align-items:flex-start; gap:11px; font-size:14.5px; color:var(--ink); line-height:1.45; }
+  .masthead .steps-num{
+    flex:none; width:20px; height:20px; margin-top:1px; border-radius:50%;
+    background:var(--accent-tint); color:var(--accent-strong);
+    font-family:'IBM Plex Mono', monospace; font-size:11px; font-weight:600;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .masthead .save-note{
+    margin-top:18px; padding:10px 14px; border-radius:8px;
+    background:var(--warn-tint); color:var(--warn); font-size:13px;
+  }
+  .masthead .save-note strong{ color:inherit; }
+
+  .banner{
+    border:1px solid var(--line); background:var(--surface); border-radius:10px;
+    padding:12px 16px; margin-bottom:24px; font-size:14px; color:var(--ink-soft);
+    display:flex; gap:10px; align-items:flex-start;
+  }
+  .banner.warn{ border-color:var(--warn); background:var(--warn-tint); color:var(--warn); }
+
+  .chapter{
+    background:var(--surface); border:1px solid var(--line); border-radius:16px;
+    padding:36px 38px; box-shadow:var(--shadow); margin-bottom:26px; scroll-margin-top:24px;
+  }
+  .chapter-head{ margin-bottom:22px; }
+  .chapter-eyebrow{ display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+  .chapter-num{
+    font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--accent-strong);
+    background:var(--accent-tint); border-radius:6px; padding:2px 8px;
+  }
+  .chapter h2{ font-size:25px; margin-bottom:10px; }
+  .chapter .desc{ color:var(--ink-soft); max-width:64ch; font-size:15px; }
+
+  .callout{
+    border-left:3px solid var(--accent); background:var(--accent-tint); border-radius:0 10px 10px 0;
+    padding:16px 20px; margin:20px 0; font-size:14px; color:var(--ink);
+  }
+  .callout .eyebrow{ color:var(--accent-strong); margin-bottom:8px; }
+  .callout ul{ margin:8px 0 0; padding-left:20px; }
+  .callout li{ margin-bottom:4px; }
+
+  .subsection{ margin:26px 0; padding-top:22px; border-top:1px solid var(--line); }
+  .subsection h3{ font-size:17px; margin-bottom:10px; }
+
+  label.field-label{ display:block; margin-bottom:6px; }
+  input[type=text], input[type=url], textarea, select{
+    width:100%; font:inherit; font-size:14.5px; color:var(--ink); background:var(--surface);
+    border:1px solid var(--line); border-radius:8px; padding:10px 12px; font-family:'Onest', sans-serif;
+  }
+  input[type=text]:focus, input[type=url]:focus, textarea:focus, select:focus{
+    outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent);
+  }
+  textarea{ resize:vertical; min-height:64px; }
+  input[disabled], textarea[disabled], select[disabled]{ opacity:.55; cursor:not-allowed; }
+
+  .field{ margin-bottom:16px; }
+  .field:last-child{ margin-bottom:0; }
+  .hint{ font-size:12.5px; color:var(--ink-faint); margin-top:5px; }
+
+  .color-grid{ display:grid; grid-template-columns:1fr 1fr; gap:22px; }
+  @media (max-width:640px){ .color-grid{ grid-template-columns:1fr; } }
+  .color-card{ border:1px solid var(--line); border-radius:12px; padding:18px; background:var(--paper); }
+  .swatch{ height:84px; border-radius:9px; border:1px solid var(--line); margin-bottom:14px; }
+  .color-row{ display:flex; gap:8px; align-items:center; }
+  .color-row input[type=color]{
+    width:40px; height:40px; padding:0; border:1px solid var(--line); border-radius:8px; background:none; cursor:pointer;
+  }
+  .hsl-readout{
+    font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--ink-soft);
+    background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:6px 9px; margin-top:10px; display:inline-block;
+  }
+
+  .btn{
+    font-family:'Onest', sans-serif; font-weight:600; font-size:13.5px; cursor:pointer;
+    border-radius:8px; padding:9px 15px; border:1px solid transparent; transition:filter .12s, background .12s;
+  }
+  .btn:hover{ filter:brightness(0.97); }
+  .btn:disabled{ opacity:.5; cursor:not-allowed; filter:none; }
+  .btn-primary{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+  .btn-ghost{ background:transparent; color:var(--ink); border-color:var(--line); }
+  .btn-ghost:hover{ background:var(--line-soft); }
+  .btn-add{ background:transparent; color:var(--accent-strong); border:1px dashed var(--accent); font-size:13px; padding:8px 13px; }
+  .btn-remove{ background:transparent; color:var(--ink-faint); border:none; font-size:18px; line-height:1; padding:4px 6px; cursor:pointer; }
+  .btn-remove:hover{ color:var(--accent-strong); }
+
+  .toggle-pill{
+    display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:999px;
+    border:1px solid var(--line); font-family:'IBM Plex Mono', monospace; font-size:11px; text-transform:uppercase;
+    letter-spacing:.03em; cursor:pointer; color:var(--ink-faint); user-select:none;
+  }
+  .toggle-pill input{ display:none; }
+  .toggle-pill.checked-base{ background:var(--accent-tint); color:var(--accent-strong); border-color:var(--accent-tint); }
+  .toggle-pill.checked-filter{ background:var(--good-tint); color:var(--good-strong); border-color:var(--good-tint); }
+
+  .type-card{
+    border:1px solid var(--line); border-left:4px solid var(--accent); border-radius:12px;
+    padding:22px 22px 20px; background:var(--paper); margin-bottom:22px;
+    box-shadow:0 1px 0 rgba(16,40,43,.03);
+  }
+  .type-card:last-child{ margin-bottom:0; }
+  .type-index{
+    display:inline-flex; align-items:center; gap:6px; font-family:'IBM Plex Mono', monospace;
+    font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--accent-strong);
+    background:var(--accent-tint); border-radius:999px; padding:3px 10px; margin-bottom:12px;
+  }
+  .type-head{ display:flex; gap:12px; align-items:center; margin-bottom:16px; }
+  .type-head input{ flex:1; font-size:17px; font-weight:600; font-family:'Fraunces', serif; }
+
+  .section-card{
+    border:1px solid var(--line-soft); border-left:3px solid var(--ink-faint); border-radius:10px;
+    padding:16px 16px 8px; background:var(--surface); margin-bottom:16px;
+  }
+  .section-card:last-child{ margin-bottom:0; }
+  .section-index{
+    display:inline-flex; align-items:center; font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-faint);
+    margin-bottom:8px;
+  }
+  .section-head{ display:flex; gap:8px; align-items:center; margin-bottom:12px; }
+  .section-head input{ flex:1; font-weight:600; }
+
+  .order-btns{ display:flex; flex-direction:column; gap:2px; }
+  .order-btn{
+    background:transparent; border:1px solid var(--line); color:var(--ink-faint); cursor:pointer;
+    width:22px; height:18px; line-height:1; border-radius:4px; font-size:10px; padding:0;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .order-btn:hover:not(:disabled){ background:var(--line-soft); color:var(--ink); }
+  .order-btn:disabled{ opacity:.3; cursor:not-allowed; }
+
+  input.needs-input, .type-head input.needs-input{
+    border-color:var(--warn); background:var(--warn-tint);
+  }
+  input.needs-input::placeholder{ color:var(--warn); opacity:.85; font-style:italic; }
+
+  .question-row{
+    border:1px solid var(--line); border-radius:9px; padding:14px 16px; margin-bottom:12px; background:var(--paper);
+  }
+  .question-row:last-child{ margin-bottom:10px; }
+  .q-top{ display:grid; grid-template-columns:auto 1fr 190px auto; gap:10px; align-items:start; margin-bottom:8px; }
+  .q-top-pq{ grid-template-columns:1fr 190px auto; }
+  @media (max-width:640px){ .q-top{ grid-template-columns:1fr; } .q-top .order-btns{ flex-direction:row; } }
+  .q-flags{ display:flex; gap:8px; flex-wrap:wrap; margin:10px 0; }
+  .q-move{ display:flex; align-items:center; gap:8px; margin-top:8px; }
+  .q-move select{ width:auto; font-size:12.5px; padding:6px 8px; }
+
+  .options-editor{ margin-top:10px; border-top:1px dashed var(--line); padding-top:10px; }
+  .option-row{ display:flex; gap:8px; margin-bottom:8px; align-items:center; }
+  .option-row input{ font-size:13.5px; }
+  .option-label{ flex:1; }
+  .option-link{ flex:1; }
+
+  .link-row{ display:flex; gap:8px; margin-bottom:8px; }
+  .link-row input{ flex:1; }
+
+  .editor-name{
+    width:150px; font-size:13px; padding:7px 10px; border-radius:8px;
+    border:1px solid var(--line); background:var(--surface); color:var(--ink); font-family:'Onest', sans-serif;
+  }
+  .savebar{
+    position:fixed; right:24px; bottom:24px; z-index:40;
+    background:var(--surface); border:1px solid var(--line); border-radius:999px; box-shadow:var(--shadow);
+    padding:10px 10px 10px 20px; display:flex; align-items:center; gap:14px;
+  }
+  .savebar .state-text{ font-size:12.5px; color:var(--ink-soft); white-space:nowrap; }
+  @media (max-width:520px){ .savebar{ left:16px; right:16px; border-radius:16px; } }
+
+  .footer-note{ text-align:center; color:var(--ink-faint); font-size:12.5px; margin-top:36px; }
+  `;
+  const styleEl = document.createElement('style');
+  styleEl.textContent = CSS;
+  document.head.appendChild(styleEl);
+
+  /* ---------------------------------------------------------------- */
+  /* helpers                                                           */
+  /* ---------------------------------------------------------------- */
+  let uidCounter = 1;
+  function uid(prefix){ return prefix + '_' + (Date.now().toString(36)) + '_' + (uidCounter++); }
+  function esc(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function escAttr(s){ return esc(s); }
+
+  function hexToHsl(hex){
+    let h = (hex || '').replace('#','').trim();
+    if(h.length===3) h = h.split('').map(c=>c+c).join('');
+    if(!/^[0-9a-fA-F]{6}$/.test(h)) return null;
+    const r = parseInt(h.slice(0,2),16)/255, g = parseInt(h.slice(2,4),16)/255, b = parseInt(h.slice(4,6),16)/255;
+    const max = Math.max(r,g,b), min = Math.min(r,g,b);
+    let hue, sat, light = (max+min)/2;
+    if(max===min){ hue = 0; sat = 0; }
+    else{
+      const d = max-min;
+      sat = light > 0.5 ? d/(2-max-min) : d/(max+min);
+      switch(max){
+        case r: hue = (g-b)/d + (g<b?6:0); break;
+        case g: hue = (b-r)/d + 2; break;
+        default: hue = (r-g)/d + 4;
+      }
+      hue *= 60;
+    }
+    return 'hsl(' + Math.round(hue) + ', ' + Math.round(sat*100) + '%, ' + Math.round(light*100) + '%)';
+  }
+
+  function typeLabel(t){
+    return { single:'Single select', multi:'Multi select', string:'String', textarea:'Text Area' }[t] || t;
+  }
+
+  /* Questions with a Tribe-provided standard list (nationality, languages    */
+  /* spoken, country of residence) skip the manual options editor entirely.  */
+  const STANDARD_LIST_IDS = ['q_from', 'q_speak', 'pq_country', 'q_admin_from', 'q_admin_speak'];
+  function isStandardListQuestion(q){ return STANDARD_LIST_IDS.includes(q.id); }
+
+  function fmtWhen(iso){
+    if(!iso) return null;
+    try{
+      const d = new Date(iso);
+      return d.toLocaleString(undefined, { month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    }catch(e){ return null; }
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* runtime (non-persisted) flags                                     */
+  /* ---------------------------------------------------------------- */
+  let readOnly = (BOOT.role || 'edit') !== 'edit';
+  let dirty = false;
+  let saving = false;
+  let saveError = '';
+  let editorName = (function(){ try{ return localStorage.getItem('tribe-editor-name') || ''; }catch(e){ return ''; } })();
+
+  /* ---------------------------------------------------------------- */
+  /* mutation helpers                                                  */
+  /* ---------------------------------------------------------------- */
+  function markDirty(){ dirty = true; renderSaveBar(); scheduleAutosave(); }
+
+  function findQuestionContext(profileId, sectionId, qId){
+    const profile = state.ambassadorProfiles.find(p => p.id === profileId);
+    if(!profile) return null;
+    const section = profile.sections.find(s => s.id === sectionId);
+    if(!section) return null;
+    const q = section.questions.find(q => q.id === qId);
+    if(!q) return null;
+    return { profile, section, q };
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* CHAPTER 1 — colours                                                */
+  /* ---------------------------------------------------------------- */
+  function renderColorCard(key, title){
+    const c = state.colors[key];
+    const hsl = hexToHsl(c.hex) || 'invalid hex';
+    return `
+    <div class="color-card">
+      <div class="eyebrow" style="margin-bottom:10px;">${esc(title)}</div>
+      <div class="swatch" style="background:${escAttr(c.hex)}" data-swatch-preview="${key}"></div>
+      <div class="color-row">
+        <input type="color" value="${/^#[0-9a-fA-F]{6}$/.test(c.hex) ? c.hex : '#000000'}" data-color-picker="${key}" ${readOnly?'disabled':''}>
+        <input type="text" class="mono" value="${escAttr(c.hex)}" data-color-hex="${key}" placeholder="#0f5b62" ${readOnly?'disabled':''}>
+      </div>
+      <span class="hsl-readout" data-hsl-readout="${key}">${esc(hsl)}</span>
+    </div>`;
+  }
+
+  function renderColorsChapter(){
+    return `
+    <section class="chapter" id="ch-1">
+      ${chapterHead(1, 'Platform Colours', 'These two colours define the look and feel of your Tribe platform. Provide your preferred brand colours, or keep the defaults below.')}
+      <div class="color-grid">
+        ${renderColorCard('main', 'Main platform colour')}
+        ${renderColorCard('secondary', 'Secondary platform colour')}
+      </div>
+    </section>`;
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* CHAPTER 2 — privacy policy                                        */
+  /* ---------------------------------------------------------------- */
+  function renderPrivacyChapter(){
+    return `
+    <section class="chapter" id="ch-2">
+      ${chapterHead(2, 'Linked Privacy Policy', 'On the Tribe platform, Tribe acts only as data processor — your institution remains the data controller, responsible for how prospective students’ and ambassadors’ personal data is handled. We link your institution’s own privacy policy at sign-up and in the settings page so they can always find it. Please confirm the correct link below.')}
+      <div class="field">
+        <label class="field-label eyebrow">Privacy policy URL</label>
+        <input type="url" data-bind="privacyPolicy" value="${escAttr(state.privacyPolicy)}" placeholder="https://" ${readOnly?'disabled':''}>
+      </div>
+    </section>`;
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* CHAPTER 3 — logo                                                   */
+  /* ---------------------------------------------------------------- */
+  function renderLogoChapter(){
+    return `
+    <section class="chapter" id="ch-3">
+      ${chapterHead(3, 'Logo', 'Your logo appears throughout your Tribe platform, from the sign-in page to email notifications.')}
+      <div class="banner">Please email a horizontal version of your logo, with no background, to your Tribe contact.</div>
+    </section>`;
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* CHAPTER 4 — ambassador profiles                                    */
+  /* ---------------------------------------------------------------- */
+  function renderQuestion(profile, section, q, qIndex, qCount){
+    const isSelect = q.type === 'single' || q.type === 'multi';
+    const otherSections = profile.sections.filter(s => s.id !== section.id);
+    const textEmpty = !q.text || !q.text.trim();
+    const options = (q.options || []).map((opt, i) => {
+      const optEmpty = !opt.label || !opt.label.trim();
+      return `
+      <div class="option-row">
+        <input type="text" class="option-label ${optEmpty?'needs-input':''}" placeholder="${optEmpty ? 'Not yet filled in — selection option name' : 'Option label'}" value="${escAttr(opt.label)}"
+          data-opt-label data-profile="${profile.id}" data-section="${section.id}" data-question="${q.id}" data-optindex="${i}" ${readOnly?'disabled':''}>
+        ${readOnly ? '' : `<button class="btn-remove" data-action="remove-option" data-profile="${profile.id}" data-section="${section.id}" data-question="${q.id}" data-index="${i}" title="Remove">×</button>`}
+      </div>`;
+    }).join('');
+
+    return `
+    <div class="question-row">
+      <div class="q-top">
+        <div class="order-btns">
+          <button class="order-btn" data-action="move-question-up" data-profile="${profile.id}" data-section="${section.id}" data-question="${q.id}" title="Move up" ${readOnly||qIndex===0?'disabled':''}>▲</button>
+          <button class="order-btn" data-action="move-question-down" data-profile="${profile.id}" data-section="${section.id}" data-question="${q.id}" title="Move down" ${readOnly||qIndex===qCount-1?'disabled':''}>▼</button>
+        </div>
+        <input type="text" class="${textEmpty?'needs-input':''}" placeholder="Not yet filled in — question name" value="${escAttr(q.text)}"
+          data-q-text data-profile="${profile.id}" data-section="${section.id}" data-question="${q.id}" ${readOnly?'disabled':''}>
+        <select data-q-type data-profile="${profile.id}" data-section="${section.id}" data-question="${q.id}" ${readOnly?'disabled':''}>
+          <option value="single" ${q.type==='single'?'selected':''}>Single select</option>
+          <option value="multi" ${q.type==='multi'?'selected':''}>Multi select</option>
+          <option value="string" ${q.type==='string'?'selected':''}>String</option>
+          <option value="textarea" ${q.type==='textarea'?'selected':''}>Text Area</option>
+        </select>
+        ${readOnly ? '' : `<button class="btn-remove" data-action="remove-question" data-profile="${profile.id}" data-section="${section.id}" data-question="${q.id}" title="Remove question">×</button>`}
+      </div>
+      <div class="q-flags">
+        <label class="toggle-pill ${q.baseProfile ? 'checked-base' : ''}">
+          <input type="checkbox" ${q.baseProfile?'checked':''} data-q-flag="baseProfile" data-profile="${profile.id}" data-section="${section.id}" data-question="${q.id}" ${readOnly?'disabled':''}>
+          Base profile
+        </label>
+        ${isSelect ? `
+        <label class="toggle-pill ${q.filterable ? 'checked-filter' : ''}">
+          <input type="checkbox" ${q.filterable?'checked':''} data-q-flag="filterable" data-profile="${profile.id}" data-section="${section.id}" data-question="${q.id}" ${readOnly?'disabled':''}>
+          Filterable
+        </label>` : ''}
+      </div>
+      ${isSelect ? (isStandardListQuestion(q) ? `
+      <div class="options-editor">
+        <div class="hint">Tribe already provides a standard list for this question — no need to add options here. If you'd rather use your own list, send it to us as a spreadsheet by email and we'll set it up for you.</div>
+      </div>` : `
+      <div class="options-editor">
+        <label class="field-label eyebrow">Answer options</label>
+        <div class="hint" style="margin-bottom:8px;">20 or more possible answers? Leave this empty and email us the list instead.</div>
+        ${options || '<div class="hint">No options yet — add one below.</div>'}
+        ${readOnly ? '' : `<button class="btn btn-add" data-action="add-option" data-profile="${profile.id}" data-section="${section.id}" data-question="${q.id}">+ Add option</button>`}
+      </div>`) : ''}
+      ${otherSections.length ? `
+      <div class="q-move">
+        <span class="hint">Move to:</span>
+        <select data-action-select="move-question" data-profile="${profile.id}" data-section="${section.id}" data-question="${q.id}" ${readOnly?'disabled':''}>
+          <option value="">Choose a section…</option>
+          ${otherSections.map(s => `<option value="${escAttr(s.id)}">${esc(s.title)}</option>`).join('')}
+        </select>
+      </div>` : ''}
+    </div>`;
+  }
+
+  function renderSection(profile, section, sIndex, sCount){
+    const titleEmpty = !section.title || !section.title.trim();
+    return `
+    <div class="section-card">
+      <div class="section-index">Section ${sIndex+1} of ${sCount}</div>
+      <div class="section-head">
+        <div class="order-btns">
+          <button class="order-btn" data-action="move-section-up" data-profile="${profile.id}" data-section="${section.id}" title="Move up" ${readOnly||sIndex===0?'disabled':''}>▲</button>
+          <button class="order-btn" data-action="move-section-down" data-profile="${profile.id}" data-section="${section.id}" title="Move down" ${readOnly||sIndex===sCount-1?'disabled':''}>▼</button>
+        </div>
+        <input type="text" class="${titleEmpty?'needs-input':''}" value="${escAttr(section.title)}" placeholder="Not yet filled in — section name"
+          data-section-title data-profile="${profile.id}" data-section="${section.id}" ${readOnly?'disabled':''}>
+        ${readOnly ? '' : `<button class="btn-remove" data-action="remove-section" data-profile="${profile.id}" data-section="${section.id}" title="Remove section">×</button>`}
+      </div>
+      ${section.questions.map((q,i) => renderQuestion(profile, section, q, i, section.questions.length)).join('')}
+      ${readOnly ? '' : `<button class="btn btn-add" data-action="add-question" data-profile="${profile.id}" data-section="${section.id}">+ Add question</button>`}
+    </div>`;
+  }
+
+  function renderProfileType(profile, pIndex){
+    const nameEmpty = !profile.name || !profile.name.trim();
+    return `
+    <div class="type-card">
+      <div class="type-index">Profile type ${pIndex+1}</div>
+      <div class="type-head">
+        <input type="text" class="${nameEmpty?'needs-input':''}" value="${escAttr(profile.name)}" placeholder="Not yet filled in — profile type name"
+          data-profile-name data-profile="${profile.id}" ${readOnly?'disabled':''}>
+        ${readOnly ? '' : `<button class="btn-remove" data-action="remove-profile" data-profile="${profile.id}" title="Remove profile type">×</button>`}
+      </div>
+      ${profile.sections.map((s,i) => renderSection(profile, s, i, profile.sections.length)).join('')}
+      ${readOnly ? '' : `<button class="btn btn-add" data-action="add-section" data-profile="${profile.id}">+ Add section</button>`}
+    </div>`;
+  }
+
+  function renderAmbassadorsChapter(){
+    return `
+    <section class="chapter" id="ch-4">
+      ${chapterHead(4, 'Ambassador Profiles', 'Ambassador profiles are what prospective students browse to find someone they can relate to. Here you decide exactly which questions appear on your ambassadors’ profiles.')}
+      <div class="callout">
+        <div class="eyebrow">How this section is built up</div>
+        <p style="margin:0 0 10px;"><strong>1. Profile types.</strong> A profile type is a complete set of profile questions for one kind of ambassador. By default we’ve started you off with two — <strong>Student Ambassador Profile</strong> and <strong>Admin Profile</strong> — below. If other groups should answer different questions (alumni, faculty…), give each one its own profile type using <strong>“+ Add another ambassador profile type”</strong> at the very bottom of this section.</p>
+        <p style="margin:0 0 10px;"><strong>2. Sections.</strong> Within a profile type, questions are grouped into sections, each with its own section title (for example “Academic Life” or “Social Life”) — set the title in the box at the top of the section. Add a new section with <strong>“+ Add section”</strong> at the bottom of a profile type, and use the ▲▼ arrows to reorder sections.</p>
+        <p style="margin:0 0 10px;"><strong>3. Questions.</strong> Within each section, add the individual questions ambassadors will answer using <strong>“+ Add question”</strong> at the bottom of the section, and use the ▲▼ arrows to reorder them. Every question has:</p>
+        <ul>
+          <li><strong>A question name</strong> — what’s being asked, e.g. “My Program of Study”.</li>
+          <li><strong>A question type</strong> — <strong>String</strong> (a short text answer), <strong>Text Area</strong> (a longer free-text answer), <strong>Single select</strong> (ambassadors pick one option from a list you provide), or <strong>Multi select</strong> (ambassadors can pick several options from a list you provide). For single and multi select, add the answer options underneath the question.</li>
+          <li><strong>Base profile</strong> — switch this on if the answer should also appear on the preview card students see in the ambassador overview, before opening the full profile.</li>
+          <li><strong>Filterable</strong> — switch this on if students should be able to filter ambassadors by their answer. Only available for single and multi select questions.</li>
+        </ul>
+        <p style="margin:10px 0 0;">For a single or multi select question with 20 or more possible answers — nationality and languages spoken are common examples — you don't need to list them here: Tribe already has a default list for these, or you can send us your own as a spreadsheet by email and leave the answer options field empty.</p>
+      </div>
+      ${state.ambassadorProfiles.map(renderProfileType).join('')}
+      ${readOnly ? '' : `<button class="btn btn-add" data-action="add-profile" style="margin-top:6px;">+ Add another ambassador profile type</button>`}
+    </section>`;
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* CHAPTER 5 — prospect onboarding questions                          */
+  /* ---------------------------------------------------------------- */
+  function renderProspectQuestion(q){
+    const isSelect = q.type === 'single' || q.type === 'multi';
+    const pqTextEmpty = !q.text || !q.text.trim();
+    const options = (q.options || []).map((opt, i) => {
+      const optEmpty = !opt.label || !opt.label.trim();
+      return `
+      <div class="option-row">
+        <input type="text" class="option-label ${optEmpty?'needs-input':''}" placeholder="${optEmpty ? 'Not yet filled in — selection option name' : 'Option label'}" value="${escAttr(opt.label)}"
+          data-pq-opt-label data-question="${q.id}" data-optindex="${i}" ${readOnly?'disabled':''}>
+        ${readOnly ? '' : `<button class="btn-remove" data-action="remove-pq-option" data-question="${q.id}" data-index="${i}" title="Remove">×</button>`}
+      </div>`;
+    }).join('');
+    return `
+    <div class="question-row">
+      <div class="q-top q-top-pq">
+        <input type="text" class="${pqTextEmpty?'needs-input':''}" placeholder="Not yet filled in — question name" value="${escAttr(q.text)}" data-pq-text data-question="${q.id}" ${readOnly?'disabled':''}>
+        <select data-pq-type data-question="${q.id}" ${readOnly?'disabled':''}>
+          <option value="single" ${q.type==='single'?'selected':''}>Single select</option>
+          <option value="multi" ${q.type==='multi'?'selected':''}>Multi select</option>
+          <option value="string" ${q.type==='string'?'selected':''}>String</option>
+        </select>
+        ${readOnly ? '' : `<button class="btn-remove" data-action="remove-pq" data-question="${q.id}" title="Remove question">×</button>`}
+      </div>
+      ${isSelect ? (isStandardListQuestion(q) ? `
+      <div class="options-editor">
+        <div class="hint">Tribe already provides a standard list for this question — no need to add options here. If you'd rather use your own list, send it to us as a spreadsheet by email and we'll set it up for you.</div>
+      </div>` : `
+      <div class="options-editor">
+        <label class="field-label eyebrow">Answer options</label>
+        <div class="hint" style="margin-bottom:8px;">Planning to sync this with your CRM? Use the exact option names your CRM expects. 20 or more possible answers? Leave this empty and email us the list instead.</div>
+        ${options || '<div class="hint">No options yet — add one below.</div>'}
+        ${readOnly ? '' : `<button class="btn btn-add" data-action="add-pq-option" data-question="${q.id}">+ Add option</button>`}
+      </div>`) : ''}
+    </div>`;
+  }
+
+  function renderProspectChapter(){
+    return `
+    <section class="chapter" id="ch-5">
+      ${chapterHead(5, 'Prospect Onboarding Questions', 'When a prospective student creates an account to chat with an ambassador, you can ask a few onboarding questions. These help you capture richer lead information on top of what we always collect: email address, first name, and last name.')}
+      <div class="callout">
+        <div class="eyebrow">How to complete this section</div>
+        For each question, give it a name, and choose <strong>single select</strong>, <strong>multi select</strong>, or <strong>string</strong>. Popular fields include country of residence, degree of interest, and expected start date. If a list of options is very long — 20 or more answers — you don't have to type it out here: send it to us as a spreadsheet by email instead and leave the answer options field empty.
+      </div>
+      <div class="subsection">
+        <h3>CRM Integration</h3>
+        <div class="field">
+          <label class="field-label eyebrow">Will you be looking to integrate with a CRM?</label>
+          <select data-crm-integrate ${readOnly?'disabled':''}>
+            <option value="" ${!state.crm.integrate ? 'selected' : ''}>Not sure yet</option>
+            <option value="yes" ${state.crm.integrate === 'yes' ? 'selected' : ''}>Yes</option>
+            <option value="no" ${state.crm.integrate === 'no' ? 'selected' : ''}>No</option>
+          </select>
+        </div>
+        ${state.crm.integrate === 'yes' ? `
+        <div class="field" style="margin-top:10px;">
+          <label class="field-label eyebrow">Which CRM do you use?</label>
+          <input type="text" data-bind="crm.name" value="${escAttr(state.crm.name)}" placeholder="e.g. Salesforce, HubSpot, Slate…" ${readOnly?'disabled':''}>
+        </div>` : ''}
+        <div class="hint" style="margin-top:10px;">If you'll be setting up an integration, you only need to give us the display names of the single and multi select questions you want to sync — the exact labels prospects and ambassadors see, below. If your CRM instead maps selections onto technical or internal names, we'll be in touch to collect those when we configure it.</div>
+      </div>
+      ${state.prospectQuestions.map(renderProspectQuestion).join('')}
+      ${readOnly ? '' : `<button class="btn btn-add" data-action="add-pq" style="margin-top:6px;">+ Add a question</button>`}
+    </section>`;
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* CHAPTER 6 — next steps                                             */
+  /* ---------------------------------------------------------------- */
+  function renderNextStepsChapter(){
+    const savedWhen = fmtWhen(state.activity.lastSavedAt);
+    return `
+    <section class="chapter" id="ch-6">
+      ${chapterHead(6, 'Next Steps', 'Once you’ve reviewed this pack and made any changes you’d like, mark it ready below and we’ll configure everything on your platform.')}
+      <div class="field">
+        <label class="field-label eyebrow">Anything else we should know?</label>
+        <textarea data-bind="notes" placeholder="Optional notes for your Tribe contact…" ${readOnly?'disabled':''}>${esc(state.notes)}</textarea>
+      </div>
+      <div class="field" style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+        <button class="btn ${state.status==='ready' ? 'btn-ghost' : 'btn-primary'}" data-action="set-status" data-status="ready" ${readOnly?'disabled':''}>
+          ${state.status==='ready' ? '✓ Marked ready to configure' : 'Mark ready — configure my platform'}
+        </button>
+        ${state.status==='ready' ? `<button class="btn btn-ghost" data-action="set-status" data-status="in_review" ${readOnly?'disabled':''}>Reopen for edits</button>` : ''}
+      </div>
+      ${savedWhen ? `<div class="hint" style="margin-top:16px;">Last saved ${esc(savedWhen)}${state.activity.lastSavedBy ? ' by ' + esc(state.activity.lastSavedBy) : ''}.</div>` : ''}
+    </section>`;
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* shared chapter head + nav + masthead                              */
+  /* ---------------------------------------------------------------- */
+  const CHAPTERS = [
+    { n:1, id:'ch-1', title:'Platform Colours' },
+    { n:2, id:'ch-2', title:'Privacy Policy' },
+    { n:3, id:'ch-3', title:'Logo' },
+    { n:4, id:'ch-4', title:'Ambassador Profiles' },
+    { n:5, id:'ch-5', title:'Prospect Questions' },
+    { n:6, id:'ch-6', title:'Next Steps' },
+  ];
+
+  const TRIBE_LOGO = 'data:image/webp;base64,UklGRuAGAABXRUJQVlA4WAoAAAAQAAAATQAAGwAAQUxQSBMEAAABoHbbtmnHXtHc+5ykbCZ5tm3btm2Wbdu2bdu2bT77BWevveaHc29uJRExAShAi6uWSfagUkCxzIyMzMoGhdTGTWoGWEYRtgZe57//6c5SMIXjXBtk/q8qXAu8RfE8WLqwNJs7aeL8N2BTq/KvSsRVMSc8UDgMsJji2BRBSgbTKcIGMfE8WDhgsIi5OWx0Diyyhh/a27KYyY+x1prUjLXWJElDqcP0js1QJAwBG4ZhaBCEBjAWgYUN8pEGACYM8hcEiAeBiRk0o6djEwRIbiyAtACJk5UFimRemJEOWJPMWqBo5oVZxQFjAYzeTCWV24eOGturHD6fPGLkhDvw0KBlB5qgwaQRw6e+giQlr++//df/ft7S53ZYm8ga+/CQHb/+99ueye8UhwVIz8SeZ7IwmKJ8sSHVcRCWUBybJTnQNZfKuAyvBBuzuGQWlXHlzocQIC/yGpO8HD2eiQHMlexxecz7n/2xkLk5bJyAVKqLnBNxwj1XwQIWd56muDynLnLCvHdgmU/PM1kYTKFGInQchCUUx6ZJKOJJUpQR92bAWFx2kk49qaSnMPs+HDx4MJuq/H3/gWNrqmIQhfSeh+atqIbFKSijLVPnnaYnI46CNZhOR7ohj9z02FhVOi63pUoWW0pxbIUyJUuEGEih8p/Pi8IAC/PnufN+a1C2aR5VVR8BnqBX5Q+wMGhKr55PG2BRrAkCIEjg+QmCILQpKI9fBBsEFp9TVTgEGEERzoYBDMJt9MI+1mBxrClCYxJ47isBC4MUhN8i3QA2wAKK57G0EvvpPad/WePHH3+s/vUGes/NBlgUa4IASOA4FRYpKbMvhwWAEN9RlDkXZzgq86/87dyMQZCa55FyMLEAT1OVvOlSKkmXm5fQiYj/txAdLZ/s2USXJMi38nSypgWlzLsKNhaiGp3y/wur5FI9B31V/cd4tRrVfqj5pgEWxlogLBgKayLdANZiOcXzUFB0J72wNQLk22AmRTgNpoCUP10LC1hUo6pjH6AfxfOXK5CWnh7imbqlYQOE6EOnlGrpMAVC5YnXiwJZ3USpGt0J3Os9PbfdBAO89guP1akEBHiLQipPbVmSgUEF4VVPLN/0Dz0ZsR+sxQhGVOYu6z94q3rx3JYGgxK7GFHF80wWBhcARTxJimrEjeVgDCrtYKSiJOm9j/gDAIvHcihO8ng8EwOYm8ORSeYxN4eNgTeZ69xfQuecE3GeG86HBSwu3krvnIsi50TZHgaAxQO7qPQ8k4XBFMcxSRZRHJsBb1GEfWoIlaQyu1NJWACwKN35fypJKo+/A4u4RdGXuk6dN7dbabzatU2b7m/DIv5Z1zZtuj8G3Ni1bZtuL+HaVsuO/3JkQePLYS0SWovL6s0+8PPZbaM/LAMLAABWUDggpgIAAFAOAJ0BKk4AHAA+bTCSRqQjIaEpuqyQgA2JagCxHwAAL8zf93IgzG2r55z0QdDn6on7HewB0mf7peljo0cO8oHgZpJsYHoSZvlQfo3eSSF9jHrzSJRFyKSJ6Y9aXI4UI5SwrwpuYjhvTbtZFAjVyvElpZQuTRpcjJmQAAD+5g57SJN1vlgZrcA67mfWrO7rJgLFzb0TEWCgZTJGhF84SvRJ234XnFUleyp//XZOHPF39wqElXlNz/SVvF8jhwUEctSpPxJWk5Jnpwu5xHkkB5M90W1DHqt0Vq2ZmKnHxLvOuoXXSbxV88orwA5wPoxvaKc7grs1NB4+ujY8UP9uqZ5WLJzIehwIxCTR77B1NivriFQc5xgo84ovLXoEalpvNiGMdhvpccZ1p0kLJpTh/Gy3iee/uRu/P/csV4S6zKVtHBjcfO+Be9pmPei4LVCXIxcBTcyZQzITGm1fNoqrA4Tmw4oI+Gy22xJ8NiL4zzBOcsVdOxBdIDLwTOD0WXkGxsEdGH7+gy/b2c0a0g5JYvHjuck3W3t2I+iNHRcavgvSp1zniDih9q1m8JVdE9NDjJvcVtGWrEO7aLL8lIAUWVkbXzkfrftocG0sccnTrbqt7dGO7FAcsrtdq4NvcqVbk63S81OTg2pmpMfFNLqYTHUxc9CsWMdwWagzSNIdoeFz2MiUGOn4AYY5kTdSzr/Lkh9vbiIopoPXi46Rl3yA9ZIX0cQVHWQLhL83R3vCgWBy+g7653UZHpvNnDus1V5Y7LmeODBSSU62bxGeQIsWlHNP/dyiqmPH7QH8Qw7rDNuPMhLkUAoOneU7LJlR1LAUu1GuLHCjHixRYgVmoe8o863RmB8uNY3Wa7FgS38RZ8m+w8N/3wUv8QEP7DgAUeBPfoUh0dEQAA==';
+
+  function chapterHead(n, title, desc){
+    return `
+    <div class="chapter-head">
+      <div class="chapter-eyebrow"><span class="chapter-num">${String(n).padStart(2,'0')}</span><span class="eyebrow">Chapter ${n} of ${CHAPTERS.length}</span></div>
+      <h2>${esc(title)}</h2>
+      <p class="desc">${desc}</p>
+    </div>`;
+  }
+
+  function renderNav(){
+    return `
+    <nav class="nav">
+      <div class="nav-brand"><img src="${TRIBE_LOGO}" alt="Tribe" width="76" height="22"></div>
+      <div class="nav-title eyebrow">On this page</div>
+      <ul class="nav-list">
+        ${CHAPTERS.map(c => `
+          <li class="nav-item" data-nav="${c.id}">
+            <a href="#${c.id}"><span class="nav-num">${String(c.n).padStart(2,'0')}</span><span>${esc(c.title)}</span></a>
+          </li>`).join('')}
+      </ul>
+    </nav>`;
+  }
+
+  function renderMasthead(){
+    const isReady = state.status === 'ready';
+    return `
+    <header class="masthead">
+      <div class="status-row">
+        <span class="pill ${isReady ? 'pill-good' : 'pill-warn'}"><span class="pill-dot"></span>${isReady ? 'Ready to configure' : 'In review'}</span>
+      </div>
+      <h1>${esc(UNI_NAME)} Onboarding Pack</h1>
+      <p class="lede">This pack walks you through each customisable area of your Tribe platform and shows the default setup we’ve prepared for you.</p>
+      <ol class="steps">
+        <li><span class="steps-num">1</span><span><strong>Review</strong> each section below.</span></li>
+        <li><span class="steps-num">2</span><span><strong>Edit</strong> anything you’d like — adjust the defaults, add your own options, or leave a section exactly as it is.</span></li>
+        <li><span class="steps-num">3</span><span><strong>Mark it ready</strong> in Next Steps, and we’ll configure everything for you.</span></li>
+      </ol>
+      ${readOnly ? '' : `<div class="save-note"><strong>Your changes save automatically</strong> as you type, and are kept for the next person who opens this link.</div>`}
+      <div class="meta">Prepared for ${esc(UNI_NAME)} &middot; Editable by anyone with this link</div>
+      <div class="meta" style="margin-top:4px;">Any questions? Reach your Tribe contact at <a href="mailto:${escAttr(CONTACT_EMAIL)}">${esc(CONTACT_EMAIL)}</a>${CONTACT_CAL ? ` or <a href="${escAttr(CONTACT_CAL)}" target="_blank" rel="noopener">book a short call</a>` : ''}.</div>
+    </header>`;
+  }
+
+  function renderBanner(){
+    if(readOnly){
+      return `<div class="banner warn">This link is view-only — your edits won’t be saved. Ask your Tribe contact for an editing link.</div>`;
+    }
+    if(conflict){
+      const who = conflict.by ? esc(conflict.by) : 'Someone else';
+      return `<div class="banner warn" style="flex-direction:column; align-items:flex-start; gap:10px;">
+        <div>${who} saved a newer version of this pack while you were editing. Choose which version to keep — the other one stays in the version history either way.</div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-primary" data-action="conflict-reload">Load their version</button>
+          <button class="btn btn-ghost" data-action="conflict-overwrite">Keep my changes</button>
+        </div>
+      </div>`;
+    }
+    return '';
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* full render                                                        */
+  /* ---------------------------------------------------------------- */
+  let eventsAttached = false;
+
+  function render(){
+    const app = document.getElementById('app');
+    app.innerHTML = `
+      <div class="shell">
+        ${renderNav()}
+        <main class="main">
+          ${renderMasthead()}
+          ${renderBanner()}
+          ${renderColorsChapter()}
+          ${renderPrivacyChapter()}
+          ${renderLogoChapter()}
+          ${renderAmbassadorsChapter()}
+          ${renderProspectChapter()}
+          ${renderNextStepsChapter()}
+          <div class="footer-note">${esc(UNI_NAME)} Onboarding Pack &middot; a living document — reopen this link anytime to keep editing.</div>
+        </main>
+      </div>
+      <div class="savebar" id="savebar"></div>
+    `;
+    renderSaveBar();
+    if(!eventsAttached){ attachEvents(); eventsAttached = true; }
+    setupScrollSpy();
+  }
+
+  function renderSaveBar(){
+    const bar = document.getElementById('savebar');
+    if(!bar) return;
+    let text = 'All changes saved';
+    if(readOnly) text = 'View only';
+    else if(saving) text = 'Saving…';
+    else if(saveError) text = saveError;
+    else if(dirty) text = 'Saving shortly…';
+    else if(state.activity.lastSavedBy) text = 'Saved · last edit by ' + state.activity.lastSavedBy;
+    bar.innerHTML = `
+      ${readOnly ? '' : `<input type="text" id="editor-name" class="editor-name" placeholder="Your name" value="${escAttr(editorName)}" aria-label="Your name, shown to your Tribe contact">`}
+      <span class="state-text">${esc(text)}</span>
+      ${readOnly ? '' : `<button class="btn btn-primary" id="save-btn" ${saving ? 'disabled' : ''}>${saving ? 'Saving…' : 'Save now'}</button>`}
+    `;
+    const btn = document.getElementById('save-btn');
+    if(btn) btn.addEventListener('click', () => doSave());
+    const nameInput = document.getElementById('editor-name');
+    if(nameInput){
+      nameInput.addEventListener('input', () => {
+        editorName = nameInput.value;
+        try{ localStorage.setItem('tribe-editor-name', editorName); }catch(e){}
+      });
+    }
+  }
+
+  function setupScrollSpy(){
+    const items = document.querySelectorAll('.nav-item');
+    const sections = CHAPTERS.map(c => document.getElementById(c.id)).filter(Boolean);
+    if(!sections.length || !('IntersectionObserver' in window)) return;
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const item = document.querySelector('.nav-item[data-nav="' + entry.target.id + '"]');
+        if(!item) return;
+        if(entry.isIntersecting) item.classList.add('active');
+        else item.classList.remove('active');
+      });
+    }, { rootMargin: '-15% 0px -70% 0px' });
+    sections.forEach(s => obs.observe(s));
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* event wiring                                                       */
+  /* ---------------------------------------------------------------- */
+  function attachEvents(){
+    const app = document.getElementById('app');
+
+    app.addEventListener('input', (e) => {
+      const t = e.target;
+
+      if(t.matches('[data-bind]')){
+        const path = t.getAttribute('data-bind').split('.');
+        let obj = state;
+        for(let i=0;i<path.length-1;i++) obj = obj[path[i]];
+        obj[path[path.length-1]] = t.value;
+        markDirty();
+        return;
+      }
+
+      if(t.matches('[data-color-hex]')){
+        const key = t.getAttribute('data-color-hex');
+        state.colors[key].hex = t.value;
+        const preview = app.querySelector('[data-swatch-preview="' + key + '"]');
+        const readout = app.querySelector('[data-hsl-readout="' + key + '"]');
+        const picker = app.querySelector('[data-color-picker="' + key + '"]');
+        if(preview) preview.style.background = t.value;
+        if(readout) readout.textContent = hexToHsl(t.value) || 'invalid hex';
+        if(picker && /^#[0-9a-fA-F]{6}$/.test(t.value)) picker.value = t.value;
+        markDirty();
+        return;
+      }
+
+      if(t.matches('[data-profile-name]')){
+        const p = state.ambassadorProfiles.find(p => p.id === t.getAttribute('data-profile'));
+        if(p) p.name = t.value;
+        t.classList.toggle('needs-input', !t.value || !t.value.trim());
+        markDirty(); return;
+      }
+      if(t.matches('[data-section-title]')){
+        t.classList.toggle('needs-input', !t.value || !t.value.trim());
+        const ctx = findQuestionContext(t.getAttribute('data-profile'), t.getAttribute('data-section'), null) ||
+          { section: (state.ambassadorProfiles.find(p=>p.id===t.getAttribute('data-profile'))||{sections:[]}).sections.find(s=>s.id===t.getAttribute('data-section')) };
+        if(ctx.section) ctx.section.title = t.value;
+        markDirty(); return;
+      }
+      if(t.matches('[data-q-text]')){
+        const ctx = findQuestionContext(t.getAttribute('data-profile'), t.getAttribute('data-section'), t.getAttribute('data-question'));
+        if(ctx) ctx.q.text = t.value;
+        const textEmpty = !t.value || !t.value.trim();
+        t.classList.toggle('needs-input', textEmpty);
+        t.placeholder = 'Not yet filled in — question name';
+        markDirty(); return;
+      }
+      if(t.matches('[data-q-note]')){
+        const ctx = findQuestionContext(t.getAttribute('data-profile'), t.getAttribute('data-section'), t.getAttribute('data-question'));
+        if(ctx) ctx.q.note = t.value;
+        markDirty(); return;
+      }
+      if(t.matches('[data-opt-label]')){
+        const ctx = findQuestionContext(t.getAttribute('data-profile'), t.getAttribute('data-section'), t.getAttribute('data-question'));
+        if(ctx) ctx.q.options[+t.getAttribute('data-optindex')].label = t.value;
+        const optEmpty = !t.value || !t.value.trim();
+        t.classList.toggle('needs-input', optEmpty);
+        t.placeholder = optEmpty ? 'Not yet filled in — selection option name' : 'Option label';
+        markDirty(); return;
+      }
+      if(t.matches('[data-pq-text]')){
+        const q = state.prospectQuestions.find(q => q.id === t.getAttribute('data-question'));
+        if(q) q.text = t.value;
+        t.classList.toggle('needs-input', !t.value || !t.value.trim());
+        markDirty(); return;
+      }
+      if(t.matches('[data-pq-opt-label]')){
+        const q = state.prospectQuestions.find(q => q.id === t.getAttribute('data-question'));
+        if(q) q.options[+t.getAttribute('data-optindex')].label = t.value;
+        const optEmpty = !t.value || !t.value.trim();
+        t.classList.toggle('needs-input', optEmpty);
+        t.placeholder = optEmpty ? 'Not yet filled in — selection option name' : 'Option label';
+        markDirty(); return;
+      }
+    });
+
+    app.addEventListener('change', (e) => {
+      const t = e.target;
+
+      if(t.matches('[data-color-picker]')){
+        const key = t.getAttribute('data-color-picker');
+        state.colors[key].hex = t.value;
+        markDirty(); rerenderPreserveScroll(); return;
+      }
+
+      if(t.matches('[data-crm-integrate]')){
+        state.crm.integrate = t.value;
+        markDirty(); rerenderPreserveScroll(); return;
+      }
+
+      if(t.matches('[data-q-type]')){
+        const ctx = findQuestionContext(t.getAttribute('data-profile'), t.getAttribute('data-section'), t.getAttribute('data-question'));
+        if(ctx){
+          ctx.q.type = t.value;
+          if(!ctx.q.options) ctx.q.options = [];
+          if((t.value === 'single' || t.value === 'multi') && ctx.q.options.length === 0 && !isStandardListQuestion(ctx.q)){
+            ctx.q.options.push({ label:'', link:'' }, { label:'', link:'' });
+          }
+          if(t.value !== 'single' && t.value !== 'multi') ctx.q.filterable = false;
+        }
+        markDirty(); rerenderPreserveScroll(); return;
+      }
+      if(t.matches('[data-q-flag]')){
+        const ctx = findQuestionContext(t.getAttribute('data-profile'), t.getAttribute('data-section'), t.getAttribute('data-question'));
+        if(ctx) ctx.q[t.getAttribute('data-q-flag')] = t.checked;
+        markDirty(); rerenderPreserveScroll(); return;
+      }
+      if(t.matches('[data-pq-type]')){
+        const q = state.prospectQuestions.find(q => q.id === t.getAttribute('data-question'));
+        if(q){
+          q.type = t.value;
+          if(!q.options) q.options = [];
+          if((t.value === 'single' || t.value === 'multi') && q.options.length === 0 && !isStandardListQuestion(q)){
+            q.options.push({ label:'', link:'' }, { label:'', link:'' });
+          }
+        }
+        markDirty(); rerenderPreserveScroll(); return;
+      }
+      if(t.matches('[data-action-select="move-question"]')){
+        const toSectionId = t.value;
+        if(!toSectionId) return;
+        const profile = state.ambassadorProfiles.find(p => p.id === t.getAttribute('data-profile'));
+        const fromSection = profile.sections.find(s => s.id === t.getAttribute('data-section'));
+        const toSection = profile.sections.find(s => s.id === toSectionId);
+        const qId = t.getAttribute('data-question');
+        const idx = fromSection.questions.findIndex(q => q.id === qId);
+        if(idx > -1){
+          const [q] = fromSection.questions.splice(idx, 1);
+          toSection.questions.push(q);
+        }
+        markDirty(); rerenderPreserveScroll(); return;
+      }
+      if(t.matches('[data-section-title]') || t.matches('[data-profile-name]')){
+        rerenderPreserveScroll(); return;
+      }
+    });
+
+    app.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-action]');
+      if(!btn) return;
+      const action = btn.getAttribute('data-action');
+
+      if(action === 'conflict-reload'){ window.location.reload(); return; }
+      if(action === 'conflict-overwrite'){ conflict = null; rerenderPreserveScroll(); doSave(true); return; }
+
+      if(action === 'add-profile'){
+        state.ambassadorProfiles.push({
+          id: uid('profile'), name: '',
+          sections: [{ id: uid('section'), title: '', questions: [] }]
+        });
+      }
+      else if(action === 'remove-profile'){
+        if(state.ambassadorProfiles.length <= 1){
+          saveError = 'Keep at least one ambassador profile type.';
+        } else {
+          state.ambassadorProfiles = state.ambassadorProfiles.filter(p => p.id !== btn.getAttribute('data-profile'));
+        }
+      }
+      else if(action === 'add-section'){
+        const p = state.ambassadorProfiles.find(p => p.id === btn.getAttribute('data-profile'));
+        p.sections.push({ id: uid('section'), title: '', questions: [] });
+      }
+      else if(action === 'remove-section'){
+        const p = state.ambassadorProfiles.find(p => p.id === btn.getAttribute('data-profile'));
+        p.sections = p.sections.filter(s => s.id !== btn.getAttribute('data-section'));
+      }
+      else if(action === 'move-section-up' || action === 'move-section-down'){
+        const p = state.ambassadorProfiles.find(p => p.id === btn.getAttribute('data-profile'));
+        const idx = p.sections.findIndex(s => s.id === btn.getAttribute('data-section'));
+        const swapWith = action === 'move-section-up' ? idx - 1 : idx + 1;
+        if(swapWith >= 0 && swapWith < p.sections.length){
+          [p.sections[idx], p.sections[swapWith]] = [p.sections[swapWith], p.sections[idx]];
+        }
+      }
+      else if(action === 'move-question-up' || action === 'move-question-down'){
+        const p = state.ambassadorProfiles.find(p => p.id === btn.getAttribute('data-profile'));
+        const s = p.sections.find(s => s.id === btn.getAttribute('data-section'));
+        const idx = s.questions.findIndex(q => q.id === btn.getAttribute('data-question'));
+        const swapWith = action === 'move-question-up' ? idx - 1 : idx + 1;
+        if(swapWith >= 0 && swapWith < s.questions.length){
+          [s.questions[idx], s.questions[swapWith]] = [s.questions[swapWith], s.questions[idx]];
+        }
+      }
+      else if(action === 'add-question'){
+        const p = state.ambassadorProfiles.find(p => p.id === btn.getAttribute('data-profile'));
+        const s = p.sections.find(s => s.id === btn.getAttribute('data-section'));
+        s.questions.push({ id: uid('q'), text: '', type: 'string', baseProfile:false, filterable:false, note:'', options: [] });
+      }
+      else if(action === 'remove-question'){
+        const p = state.ambassadorProfiles.find(p => p.id === btn.getAttribute('data-profile'));
+        const s = p.sections.find(s => s.id === btn.getAttribute('data-section'));
+        s.questions = s.questions.filter(q => q.id !== btn.getAttribute('data-question'));
+      }
+      else if(action === 'add-option'){
+        const ctx = findQuestionContext(btn.getAttribute('data-profile'), btn.getAttribute('data-section'), btn.getAttribute('data-question'));
+        if(ctx) ctx.q.options.push({ label:'', link:'' });
+      }
+      else if(action === 'remove-option'){
+        const ctx = findQuestionContext(btn.getAttribute('data-profile'), btn.getAttribute('data-section'), btn.getAttribute('data-question'));
+        if(ctx) ctx.q.options.splice(+btn.getAttribute('data-index'), 1);
+      }
+      else if(action === 'add-pq'){
+        state.prospectQuestions.push({ id: uid('pq'), text:'', type:'string', options: [] });
+      }
+      else if(action === 'remove-pq'){
+        state.prospectQuestions = state.prospectQuestions.filter(q => q.id !== btn.getAttribute('data-question'));
+      }
+      else if(action === 'add-pq-option'){
+        const q = state.prospectQuestions.find(q => q.id === btn.getAttribute('data-question'));
+        q.options.push({ label:'', link:'' });
+      }
+      else if(action === 'remove-pq-option'){
+        const q = state.prospectQuestions.find(q => q.id === btn.getAttribute('data-question'));
+        q.options.splice(+btn.getAttribute('data-index'), 1);
+      }
+      else if(action === 'set-status'){
+        state.status = btn.getAttribute('data-status');
+        markDirty();
+        rerenderPreserveScroll();
+        doSave();
+        return;
+      }
+      else{
+        return;
+      }
+      markDirty();
+      rerenderPreserveScroll();
+    });
+  }
+
+  function rerenderPreserveScroll(){
+    const y = window.scrollY;
+    render();
+    requestAnimationFrame(() => window.scrollTo(0, y));
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* save / publish                                                     */
+  /* ---------------------------------------------------------------- */
+  /* ---------------------------------------------------------------- */
+  /* save / sync                                                        */
+  /* ---------------------------------------------------------------- */
+  let autosaveTimer = null;
+
+  function scheduleAutosave(delay){
+    if(readOnly) return;
+    if(autosaveTimer) clearTimeout(autosaveTimer);
+    autosaveTimer = setTimeout(() => { autosaveTimer = null; doSave(); }, delay || 2200);
+  }
+
+  async function doSave(force){
+    if(readOnly || saving || !API_URL) return;
+    if(autosaveTimer){ clearTimeout(autosaveTimer); autosaveTimer = null; }
+    if(conflict && !force) return;
+    saving = true; saveError = ''; renderSaveBar();
+
+    let res, data;
+    try{
+      res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          action: 'save',
+          token: TOKEN,
+          state: state,
+          version: version,
+          savedBy: editorName,
+          force: !!force
+        })
+      });
+      data = await res.json();
+    }catch(err){
+      saving = false;
+      saveError = 'Offline — your changes are safe in this tab and will save when you’re back.';
+      renderSaveBar();
+      scheduleAutosave(15000);
+      return;
+    }
+
+    saving = false;
+
+    if(res.ok && data && data.ok){
+      version = data.version;
+      dirty = false; conflict = null; saveError = '';
+      state.activity.lastSavedAt = new Date().toISOString();
+      if(editorName) state.activity.lastSavedBy = editorName;
+      renderSaveBar();
+      return;
+    }
+
+    const code = data && data.error;
+
+    if(code === 'conflict'){
+      conflict = { version: data.version, by: data.updated_by || '' };
+      rerenderPreserveScroll();
+      return;
+    }
+    if(code === 'read_only' || code === 'invalid_token'){
+      readOnly = true;
+      saveError = '';
+      rerenderPreserveScroll();
+      return;
+    }
+    if(code === 'rate_limited'){
+      saveError = 'Saving a little slower — too many saves at once.';
+      renderSaveBar();
+      scheduleAutosave(10000);
+      return;
+    }
+    saveError = 'Couldn’t save just now — retrying in a moment.';
+    renderSaveBar();
+    scheduleAutosave(10000);
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* boot                                                               */
+  /* ---------------------------------------------------------------- */
+  render();
+
+  window.addEventListener('beforeunload', (e) => {
+    if(dirty && !readOnly){ e.preventDefault(); e.returnValue = ''; }
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if(document.visibilityState === 'hidden' && dirty && !readOnly) doSave();
+  });
+}
+
+
+/* ------------------------------------------------------------------ */
+/* loader — resolves the link token, then hands state to the app       */
+/* ------------------------------------------------------------------ */
+const API_URL = 'https://rfzdnryprynmthfmnfwk.supabase.co/functions/v1/onboarding';
+
+function readToken(){
+  const hash = String(window.location.hash || '').replace(/^#/, '');
+  const fromHash = new URLSearchParams(hash).get('t');
+  if(fromHash) return fromHash;
+  return new URLSearchParams(window.location.search).get('t') || '';
+}
+
+function splash(title, message){
+  document.getElementById('app').innerHTML =
+    '<div class="splash"><h1></h1><p></p></div>';
+  document.querySelector('.splash h1').textContent = title;
+  document.querySelector('.splash p').textContent = message;
+}
+
+(async function boot(){
+  const token = readToken();
+
+  if(!token || token.length < 16){
+    splash('This link isn\u2019t active',
+           'It may have expired or been replaced. Ask your Tribe contact for a fresh link and it will pick up exactly where you left off.');
+    return;
+  }
+
+  splash('Opening your onboarding pack\u2026', 'One moment.');
+
+  let data;
+  try{
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ action: 'load', token: token })
+    });
+    data = await res.json();
+  }catch(err){
+    splash('We couldn\u2019t reach the server',
+           'Check your connection and refresh the page \u2014 nothing has been lost.');
+    return;
+  }
+
+  if(!data || !data.ok){
+    splash('This link isn\u2019t active',
+           'It may have expired or been replaced. Ask your Tribe contact for a fresh link and it will pick up exactly where you left off.');
+    return;
+  }
+
+  document.title = data.university + ' Onboarding Pack';
+
+  window.__BOOT__ = {
+    university: data.university,
+    role: data.role,
+    contactEmail: data.contact_email,
+    contactCalendar: data.contact_calendar_url,
+    apiUrl: API_URL,
+    token: token,
+    version: data.version,
+    updatedAt: data.updated_at,
+    updatedBy: data.updated_by
+  };
+
+  appScript(data.state);
+})();
+
+</script>
+</body>
+</html>
